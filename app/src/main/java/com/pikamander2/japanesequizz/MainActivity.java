@@ -20,9 +20,17 @@ import android.graphics.Color;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 
 import com.google.android.material.card.MaterialCardView;
+import com.pikamander2.japanesequizz.features.NotificationScheduler;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,6 +39,13 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView textViewBestScore;
     private TextView textViewTotalAnswered;
+
+    private final ActivityResultLauncher<String> requestNotificationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    NotificationScheduler.scheduleReminders(this);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +80,9 @@ public class MainActivity extends AppCompatActivity {
 
         setupListeners();
 
+        NotificationScheduler.initChannel(this);
+        checkAndRequestNotificationPermission();
+
         // Staggered fade-in animation for cards — Apple-like entrance
         if (savedInstanceState == null) {
             animateEntrance();
@@ -76,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         updateStats();
         updateJlptCountdown();
-        scheduleDailyNotification();
+        NotificationScheduler.scheduleReminders(this);
     }
 
     private void applyThemeFromPrefs() {
@@ -187,35 +205,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    
-    private void scheduleDailyNotification() {
-        android.app.AlarmManager alarmManager = (android.app.AlarmManager) getSystemService(android.content.Context.ALARM_SERVICE);
-        if (alarmManager == null) return;
-        
-        // Schedule every 4 hours during the day: 10:00, 14:00, 18:00, 22:00
-        int[] hours = {10, 14, 18, 22};
-        
-        for (int i = 0; i < hours.length; i++) {
-            Intent intent = new Intent(this, com.pikamander2.japanesequizz.features.NotificationReceiver.class);
-            android.app.PendingIntent pendingIntent = android.app.PendingIntent.getBroadcast(
-                this, i, intent, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
-                
-            java.util.Calendar calendar = java.util.Calendar.getInstance();
-            calendar.setTimeInMillis(System.currentTimeMillis());
-            calendar.set(java.util.Calendar.HOUR_OF_DAY, hours[i]);
-            calendar.set(java.util.Calendar.MINUTE, 0);
-            calendar.set(java.util.Calendar.SECOND, 0);
-            
-            if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
-                calendar.add(java.util.Calendar.DAY_OF_YEAR, 1);
+    private void checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
             }
-            
-            alarmManager.setRepeating(
-                android.app.AlarmManager.RTC_WAKEUP,
-                calendar.getTimeInMillis(),
-                android.app.AlarmManager.INTERVAL_DAY,
-                pendingIntent
-            );
         }
     }
 

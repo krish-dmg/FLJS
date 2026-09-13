@@ -12,7 +12,7 @@
     <string name="buttonKatakana">Katakana</string>
     <string name="buttonKanji">Kanji</string>
     <string name="buttonMixture">Mixed</string>
-    <string name="VersionNumber">Version 2.2.0</string>
+    <string name="VersionNumber">Version 2.3.0</string>
     <string name="buttonFlip">Flip Direction</string>
     <string name="Choices">Choices</string>
     <string name="Count">Count</string>
@@ -87,6 +87,15 @@
         <item>system</item>
         <item>light</item>
         <item>dark</item>
+    </string-array>
+
+    <string-array name="pref_reminder_frequency_entries">
+        <item>Multiple times a day (10:00, 14:00, 18:00, 22:00)</item>
+        <item>Once a day (at custom time)</item>
+    </string-array>
+    <string-array name="pref_reminder_frequency_values">
+        <item>multiple</item>
+        <item>daily</item>
     </string-array>
 
 </resources>

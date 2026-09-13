@@ -34,10 +34,36 @@
         android:key="theme_mode"
         android:title="Dark Mode Override" />
 
-    <EditTextPreference
-        android:key="notification_time"
-        android:title="Daily Reminder Time (HH:MM)"
-        android:summary="Set time in 24h format (e.g. 20:00)"
-        android:defaultValue="20:00" />
+    <PreferenceCategory
+        android:title="Study Reminders">
+
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="study_reminders_enabled"
+            android:summary="Receive study alerts to stay consistent with JLPT preparation"
+            android:title="Enable Study Reminders" />
+
+        <ListPreference
+            android:defaultValue="multiple"
+            android:entries="@array/pref_reminder_frequency_entries"
+            android:entryValues="@array/pref_reminder_frequency_values"
+            android:key="reminder_frequency"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="Reminder Frequency" />
+
+        <EditTextPreference
+            android:defaultValue="20:00"
+            android:dependency="study_reminders_enabled"
+            android:key="notification_time"
+            android:summary="Set time in 24h format (e.g. 20:00)"
+            android:title="Custom Reminder Time (HH:MM)" />
+
+        <Preference
+            android:key="send_test_notification"
+            android:summary="Tap to verify notification delivery immediately"
+            android:title="Send Test Notification Now" />
+
+    </PreferenceCategory>
 
 </PreferenceScreen>

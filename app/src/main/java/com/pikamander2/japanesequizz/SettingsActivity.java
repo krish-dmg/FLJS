@@ -1,6 +1,8 @@
 package com.pikamander2.japanesequizz;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -8,6 +10,8 @@ import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+
+import com.pikamander2.japanesequizz.features.NotificationScheduler;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -38,7 +42,8 @@ public class SettingsActivity extends AppCompatActivity {
         return true;
     }
 
-    public static class GeneralPreferenceFragment extends PreferenceFragmentCompat {
+    public static class GeneralPreferenceFragment extends PreferenceFragmentCompat
+            implements SharedPreferences.OnSharedPreferenceChangeListener {
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -46,6 +51,49 @@ public class SettingsActivity extends AppCompatActivity {
 
             bindPreferenceSummaryToValue(findPreference("choices_list"));
             bindPreferenceSummaryToValue(findPreference("count_list"));
+            bindPreferenceSummaryToValue(findPreference("theme_mode"));
+            bindPreferenceSummaryToValue(findPreference("reminder_frequency"));
+            bindPreferenceSummaryToValue(findPreference("notification_time"));
+
+            Preference testPref = findPreference("send_test_notification");
+            if (testPref != null) {
+                testPref.setOnPreferenceClickListener(p -> {
+                    if (getContext() != null) {
+                        NotificationScheduler.sendNotification(getContext());
+                        Toast.makeText(getContext(), "Test notification sent", Toast.LENGTH_SHORT).show();
+                    }
+                    return true;
+                });
+            }
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            SharedPreferences sp = getPreferenceManager().getSharedPreferences();
+            if (sp != null) {
+                sp.registerOnSharedPreferenceChangeListener(this);
+            }
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            SharedPreferences sp = getPreferenceManager().getSharedPreferences();
+            if (sp != null) {
+                sp.unregisterOnSharedPreferenceChangeListener(this);
+            }
+        }
+
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            if ("study_reminders_enabled".equals(key) ||
+                "reminder_frequency".equals(key) ||
+                "notification_time".equals(key)) {
+                if (getContext() != null) {
+                    NotificationScheduler.scheduleReminders(getContext());
+                }
+            }
         }
 
         private void bindPreferenceSummaryToValue(Preference preference) {
